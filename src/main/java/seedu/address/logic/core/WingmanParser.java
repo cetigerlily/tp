@@ -123,8 +123,7 @@ public class WingmanParser extends FactoryParser {
             return topCommand.get();
         }
 
-        final Optional<Command> groupedCommand =
-            this.parseGroup(operationMode, tokens);
+        final Optional<Command> groupedCommand = this.parseGroup(operationMode, tokens);
 
         if (groupedCommand.isPresent()) {
             return groupedCommand.get();

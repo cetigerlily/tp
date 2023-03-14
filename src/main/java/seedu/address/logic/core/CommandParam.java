@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.logic.core.exceptions.CommandException;
+import seedu.address.logic.core.exceptions.DuplicatePrefixesException;
 import seedu.address.logic.core.exceptions.ParseException;
 
 /**
@@ -54,8 +55,7 @@ public class CommandParam {
      * @param prefixes the prefixes of the command.
      * @return the command parameter created.
      */
-    public static CommandParam from(Deque<String> tokens,
-        Optional<Set<String>> prefixes) {
+    public static CommandParam from(Deque<String> tokens, Optional<Set<String>> prefixes) throws DuplicatePrefixesException {
         // special cases
         if (tokens.size() == 0) {
             return new CommandParam(Optional.empty(),
@@ -72,8 +72,7 @@ public class CommandParam {
         Optional<String> unnamedValue =
             parseUnnamedValue(tokens, prefixMap);
         // handle the named tokens
-        Map<String, Optional<String>> namedValues =
-            parseNamedValues(tokens, prefixMap);
+        Map<String, Optional<String>> namedValues = parseNamedValues(tokens, prefixMap);
         return new CommandParam(unnamedValue, Optional.of(namedValues));
     }
 
@@ -119,7 +118,7 @@ public class CommandParam {
      * @return the named values parsed.
      */
     public static Map<String, Optional<String>> parseNamedValues(Deque<String> tokens,
-        Set<String> prefixes) {
+        Set<String> prefixes) throws DuplicatePrefixesException {
         if (tokens.size() == 0) {
             return padNamedValues(new HashMap<>(), prefixes);
         }
@@ -135,9 +134,17 @@ public class CommandParam {
                 builder.append(tokens.pop()).append(" ");
                 continue;
             }
-            namedValues.put(prefix, Optional.of(builder.toString().trim()));
-            prefix = tokens.pop();
-            builder.setLength(0);
+
+            /* TODO: need to fix, currently doesn't work for Flight, Location, and prefixes which are last for Crew,
+                Plane, and Pilot */
+
+            if (namedValues.containsKey(prefix)) {
+                throw new DuplicatePrefixesException();
+            } else {
+                namedValues.put(prefix, Optional.of(builder.toString().trim()));
+                prefix = tokens.pop();
+                builder.setLength(0);
+            }
         }
         if (builder.length() > 0) {
             namedValues.put(prefix, Optional.of(builder.toString().trim()));
